@@ -278,6 +278,7 @@ class Gateway extends \Magento\Payment\Model\Method\AbstractMethod {
 		}
 		echo "</form>";
 		echo "<script>document.onreadystatechange = () => {document.getElementById('redirect').submit();}</script>";
+		die();
 	}
 
 	private function getDirectDetails() {
