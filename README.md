@@ -33,16 +33,16 @@ Click on the Cardstream Hosted Form bar to expand the module options.
 
 ![Magento Cardstream Config](/images/magento-cardstream-config.png)
 
-| Config Option | Explanation |
-| :-------------|:------------|
-| Enabled | Choose ‘Yes’ to enable the Cardstream module. |
-| Title   | This is the title of the payment module, as seen by your customers. |
-| Merchant ID | Enter your merchant ID here, or 100001 for test mode. |
-| Merchant Shared Key | the pre sharted key set in your mms used to create payment signatures for each transaction |
-| Country Code | The 3 digit ISO country code for your location. Use 826 for the UK. |
-| Currency Code | The 3 digit ISO currency code. Use 826 for Pounds Sterling. |
-| Payment in process | select the status to set while payment is being processed |
-| New Order Status | Choose the status that will be applied to new orders. |
-| Failed order status | select the status that will be applied to failed orders |
-| Countries | You can choose to restrict payments from specific Countries. |
+| Config Option       | Explanation                                                                                |
+| :-------------------|:-------------------------------------------------------------------------------------------|
+| Enabled             | Choose ‘Yes’ to enable the Cardstream module.                                              |
+| Title               | This is the title of the payment module, as seen by your customers.                        |
+| Merchant ID         | Enter your merchant ID here, or 100001 for test mode.                                      |
+| Merchant Shared Key | The pre-shared key set in your MMS used to create payment signatures for each transaction  |
+| Country Code        | The 3 digit ISO country code for your location. Use 826 for the UK.                        |
+| Currency Code       | The 3 digit ISO currency code. Use 826 for Pounds Sterling.                                |
+| Payment in process  | Select the status to set while payment is being processed                                  |
+| New Order Status    | Choose the status that will be applied to new orders.                                      |
+| Failed order status | Select the status that will be applied to failed orders                                    |
+| Countries           | You can choose to restrict payments from specific Countries.                               |
 
