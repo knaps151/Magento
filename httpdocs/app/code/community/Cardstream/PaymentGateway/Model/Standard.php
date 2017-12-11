@@ -26,7 +26,7 @@ class Cardstream_PaymentGateway_Model_Standard extends Mage_Payment_Model_Method
 
 	private $merchantID, $secret, $canDebug;
 
-	public $method, $session, $responsive, $countryCode, $currencyCode;
+	public $method, $session, $responsive, $countryCode, $currencyCode, $gatewayUrl;
 
 	public function __construct(){
 		$this->method = $this->getConfigData('IntegrationMethod');
@@ -38,6 +38,34 @@ class Cardstream_PaymentGateway_Model_Standard extends Mage_Payment_Model_Method
 		$this->responsive = $this->getConfigData('FormResponsive') ? 'Y' : 'N';
 		$this->canDebug = (boolean)$this->getConfigData('Debug');
 		$this->session = $this->getCoreSession();
+
+		// Idiot proof the Gateway URL we are given
+		if (
+			// Make sure we're given an valid URL
+			($url = $this->getConfigData('GatewayUrl')) &&
+			!empty($url) &&
+			preg_match('/(http[s]?:\/\/[a-z0-9\.]+(?:\/[a-z]+\/?){1,})/i', $url) != false
+		) {
+			// Prevent insecure requests
+			$url = str_ireplace('http://', 'https://', $url);
+			// Always append end slash
+			if (preg_match('/\/$/', $url) == false) {
+				$url .= '/';
+			}
+
+			// Prevent direct requests using hosted
+			if ($this->method == 'Hosted' && preg_match('/(\/direct\/)$/i', $url) != false) {
+				$this->gatewayUrl = self::HOSTED_URL;
+			} else {
+				$this->gatewayUrl = $url;
+			}
+		} else {
+			if ($this->method == 'Direct') {
+				$this->gatewayUrl = self::DIRECT_URL;
+			} else {
+				$this->gatewayUrl = self::HOSTED_URL;
+			}
+		}
 
 		if(!$this->isSecure() && $this->method == 'Direct') {
 			$this->_canUseCheckout = false;
@@ -212,13 +240,14 @@ class Cardstream_PaymentGateway_Model_Standard extends Mage_Payment_Model_Method
 		// Always clear to prevent redirects after
 		$this->clearData();
 
-		echo "<form id='redirect' action='" . self::HOSTED_URL . "' method='POST'>";
+		echo "<form id='redirect' action='" . $this->gatewayUrl . "' method='POST'>";
 		// Get session stored keys for a hosted request
 		foreach ($req as $key => $value) {
 			echo "<input type='hidden' name='$key' value='$value'/>";
 		}
 		echo "</form>";
 		echo "<script>document.onreadystatechange = () => {document.getElementById('redirect').submit();}</script>";
+		die();
 	}
 	private function getDirectDetails() {
 		$this->log('Normalizing form data');
@@ -265,7 +294,7 @@ class Cardstream_PaymentGateway_Model_Standard extends Mage_Payment_Model_Method
 		$this->log($this->commentSessionData());
 
 		$req['signature'] = $this->createSignature($req, $this->secret);
-		$res = $this->makeRequest(self::DIRECT_URL, $req);
+		$res = $this->makeRequest($this->gatewayUrl, $req);
 		$this->log('Verifying response from gateway');
 		if (!$this->hasKeys($res, $this->getGenuineResponseHeaders())) {
 			$this->log('Unable to verify response as one or more keys are missing');

@@ -55,6 +55,15 @@
 							<show_in_website>1</show_in_website>
 							<show_in_store>0</show_in_store>
 						</MerchantSharedKey>
+						<GatewayUrl translate="label">
+							<label>Gateway URL</label>
+							<comment>Leave blank to use the default gateway URL this module provides</comment>
+							<frontend_type>text</frontend_type>
+							<sort_order>5</sort_order>
+							<show_in_default>1</show_in_default>
+							<show_in_website>1</show_in_website>
+							<show_in_store>0</show_in_store>
+						</GatewayUrl>
 						<CountryCode translate="label comment">
 							<label>Country Code</label>
 							<comment>ISO Alpha-2, 3 or Numeric code (e.g. GB/GBR/826)</comment>
