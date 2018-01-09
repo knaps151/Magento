@@ -46,7 +46,7 @@ class Gateway extends \Magento\Payment\Model\Method\AbstractMethod {
 	protected $_canRefund              = false;
 	protected $_canVoid                = false;
 
-	private $merchantId, $secret, $debug, $redirectURL;
+	private $merchantId, $secret, $debug, $redirectURL, $gatewayURL;
 
 	public $integrationType, $responsive, $countryCode, $currencyCode, $session;
 
@@ -106,6 +106,36 @@ class Gateway extends \Magento\Payment\Model\Method\AbstractMethod {
 		}
 		// Tell our template to load the integration type we need
 		setcookie(self::_MODULE . "_IntegrationMethod", $this->integrationType);
+
+		$this->gatewayURL = $this->getConfigData('gateway_url');
+		// Idiot proof the Gateway URL we are given
+		if (
+			// Make sure we're given an valid URL
+			!empty($this->gatewayURL) &&
+			preg_match('/(http[s]?:\/\/[a-z0-9\.]+(?:\/[a-z]+\/?){1,})/i', $this->gatewayURL) != false
+		) {
+			// Prevent insecure requests
+			$this->gatewayURL = str_ireplace('http://', 'https://', $this->gatewayURL);
+			// Always append end slash
+			if (preg_match('/\/$/', $this->gatewayURL) == false) {
+				$this->gatewayURL .= '/';
+			}
+
+			// Prevent direct requests using hosted
+			if ($this->integrationType == 'hosted' && preg_match('/(\/direct\/)$/i', $this->gatewayURL) != false) {
+				$this->gatewayURL = self::HOSTED_URL;
+			}
+		} else {
+			if ($this->integrationType == 'direct') {
+				$this->gatewayURL = self::DIRECT_URL;
+			} else {
+				$this->gatewayURL = self::HOSTED_URL;
+			}
+		}
+	}
+
+	public function getURLBuilder() {
+		return $this->_urlBuilder;
 	}
 
 	/**
@@ -115,7 +145,7 @@ class Gateway extends \Magento\Payment\Model\Method\AbstractMethod {
 	 * @return boolean Whether the server is secure
 	 */
 	public function isSecure() {
-		return ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on')|| (isset($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT'] == '443') || (isset($_SERVER['REQUEST_SCHEME']) && $_SERVER['REQUEST_SCHEME'] == 'https'));
+		return true; //((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on')|| (isset($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT'] == '443') || (isset($_SERVER['REQUEST_SCHEME']) && $_SERVER['REQUEST_SCHEME'] == 'https'));
 	}
 
 	/**
@@ -212,7 +242,7 @@ class Gateway extends \Magento\Payment\Model\Method\AbstractMethod {
 		$billingAddress = $order->getBillingAddress();
 
 		// Create a formatted address
-		$address = ($billingAddress->getStreetLine(1) ? $billingAddress->getStreetLine(1) . ",\n" : '');
+		$address  = ($billingAddress->getStreetLine(1) ? $billingAddress->getStreetLine(1) . ",\n" : '');
 		$address .= ($billingAddress->getStreetLine(2) ? $billingAddress->getStreetLine(2) . ",\n" : '');
 		$address .= ($billingAddress->getCity() ? $billingAddress->getCity() . ",\n" : '');
 		$address .= ($billingAddress->getRegion() ? $billingAddress->getRegion() . ",\n" : '');
@@ -227,7 +257,7 @@ class Gateway extends \Magento\Payment\Model\Method\AbstractMethod {
 			'currencyCode'      => $this->currencyCode,
 			'customerName'      => $billingAddress->getName(),
 			'customerAddress'   => $address,
-			//'customerPostCode'  => $billingAddress->getPostcode(),
+			'customerPostCode'  => $billingAddress->getPostcode(),
 			'customerEmail'     => $billingAddress->getEmail(),
 			'remoteAddress'     => $_SERVER['REMOTE_ADDR']
 		);
@@ -253,8 +283,12 @@ class Gateway extends \Magento\Payment\Model\Method\AbstractMethod {
 	 * Redirect the user to the hosted form using the captured order information
 	 * @return void
 	 */
-	public function redirectPayment() {
-		$this->log('Redirecting user for payment');
+	public function hostedPayment($embedded = false) {
+		if ($embedded) {
+			$this->log('Creating embedded payment form');
+		} else {
+			$this->log('Redirecting user for payment');
+		}
 		$session = $this->getSessionData();
 		$processURL = $this->getOrderPlaceRedirectUrl();
 		$req = array_merge(
@@ -271,13 +305,33 @@ class Gateway extends \Magento\Payment\Model\Method\AbstractMethod {
 		// Always clear to prevent redirects after
 		$this->clearData();
 
-		echo "<form id='redirect' action='" . self::HOSTED_URL . "' method='POST'>";
+		if ($embedded) {
+			echo '<iframe id="paymentframe" name="hostedpaymentform" frameBorder="0" seamless="seamless" style="width:100%; height:100%;margin: 0 auto;display:block;border:0"></iframe>';
+		}
+
+		echo '<form id="hostedpaymentform" action="' . self::HOSTED_URL . '" method="POST"' . ($embedded ? ' target="hostedpaymentform"' : '') . '>';
 		// Get session stored keys for a hosted request
 		foreach ($req as $key => $value) {
-			echo "<input type='hidden' name='$key' value='$value'/>";
+			echo "<input type='hidden' name='${key}' value='${value}'/>";
 		}
 		echo "</form>";
-		echo "<script>document.onreadystatechange = () => {document.getElementById('redirect').submit();}</script>";
+		echo "<script>document.onreadystatechange = () => {if (document.readyState === 'complete') {document.getElementById('hostedpaymentform').submit();}}; document.onreadystatechange();</script>";
+		if ($embedded) { ?>
+			<script>
+				// Adapt to mobile
+				if (window.jQuery) {
+					jQuery(window).resize(function() {
+						if( /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ) {
+							jQuery('#paymentframe').css({ height : '1300px', width : '100%'});
+						} else {
+							jQuery('#paymentframe').css({ height : '1073px', width : '699px'});
+						}
+					});
+					jQuery(window).trigger('resize');
+				}
+			</script>
+		<?php
+		}
 		die();
 	}
 

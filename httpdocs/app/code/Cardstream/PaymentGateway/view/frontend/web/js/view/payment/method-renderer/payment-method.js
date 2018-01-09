@@ -93,7 +93,28 @@ define(
 			 * After place order callback
 			 */
 			afterPlaceOrder: function () {
-				window.location.replace(url.build('cardstream/order/process'));
+				var title = this.item.title;
+				var uri = url.build('cardstream/order/process');
+				if (document.cookie.indexOf('Cardstream_PaymentGateway_IntegrationMethod=iframe') > -1 ) {
+					// Remove other payment methods now that product is now an order to gain space
+					jQuery('.payment-method, .payment-option, .form-login').each(function(e) {
+						jQuery(this).remove();
+					});
+					jQuery.get({
+						url: uri,
+						success: function(data) {
+							jQuery('.payment-methods').append(data);
+							jQuery('.loading-mask').remove();
+							jQuery('.payment-methods .step-title').text(title);
+						},
+						fail: function(data) {
+							window.location.replace(uri);
+						}
+					});
+					return false;
+				} else {
+					window.location.replace(uri);
+				}
 			}
 		});
 	}

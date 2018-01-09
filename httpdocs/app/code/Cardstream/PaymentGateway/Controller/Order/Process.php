@@ -58,26 +58,36 @@ class Process extends \Magento\Framework\App\Action\Action {
 			)
 		);
 	}
+
 	private function handle($result) {
 		if (isset($result['error']) && $result['error'] !== null) {
 			$this->messageManager->addError($result['error']);
 		}
 		if (isset($result['redirect']) && $result['redirect'] !== null) {
+			if ($this->method == 'iframe') {
+				echo '<script>window.top.location = \'' . $this->instance->getURLBuilder()->getUrl($result['redirect']) . '\';</script>';
+				die();
+			}
 			$this->_redirect($result['redirect']);
 		}
 	}
+
 	public function execute() {
 		$resultRedirect = $this->resultRedirectFactory->create();
 		$this->instance->log(json_encode($this->session));
 		if ($this->method == 'hosted' && $this->isPaymentSubmission()) {
 
-			$this->instance->redirectPayment();
+			$this->instance->hostedPayment(false);
+
+		} else if ($this->method == 'iframe' && $this->isPaymentSubmission()) {
+
+			$this->instance->hostedPayment(true);
 
 		} else if ($this->method == 'direct' && $this->isPaymentSubmission()) {
 
 			$this->handle($this->instance->sendDirectPayment($resultRedirect));
 
-		} else if ($this->method == 'hosted' && $this->isPaymentResponse()) {
+		} else if (($this->method == 'hosted' || $this->method == 'iframe') && $this->isPaymentResponse()) {
 
 			$this->handle($this->instance->processAll($_POST, $resultRedirect));
 

@@ -29,6 +29,7 @@ class Integration implements \Magento\Framework\Option\ArrayInterface
 
 		return [
 			['value' => 'hosted', 'label' => __('Hosted')],
+			['value' => 'iframe', 'label' => __('Embedded (iframe)')],
 			['value' => 'direct', 'label' => __('Direct')],
 		 ];
 	}
