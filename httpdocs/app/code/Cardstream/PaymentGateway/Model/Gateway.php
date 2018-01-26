@@ -22,7 +22,7 @@ namespace Cardstream\PaymentGateway\Model;
 class Gateway extends \Magento\Payment\Model\Method\AbstractMethod {
 	const _MODULE = 'Cardstream_PaymentGateway';
 	const DIRECT_URL = 'https://gateway.cardstream.com/direct/';
-	const :_URL = 'https://gateway.cardstream.com/hosted/';
+	const HOSTED_URL = 'https://gateway.cardstream.com/hosted/';
 	const VERIFY_ERROR = 'The signature provided in the response does not match. This response might be fraudulent';
 	const PROCESS_ERROR = 'Sorry, we are unable to process this order (reason: %s). Please correct any faults and try again.';
 	const SERVICE_ERROR = 'SERVICE ERROR - CONTACT ADMIN';
