@@ -74,7 +74,7 @@ class Process extends \Magento\Framework\App\Action\Action {
 
 	public function execute() {
 		$resultRedirect = $this->resultRedirectFactory->create();
-		$this->instance->log(json_encode($this->session));
+
 		if ($this->method == 'hosted' && $this->isPaymentSubmission()) {
 
 			$this->instance->hostedPayment(false);

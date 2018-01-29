@@ -299,8 +299,9 @@ class Gateway extends \Magento\Payment\Model\Method\AbstractMethod {
 				'formResponsive' => $this->responsive
 			)
 		);
-
-		$req['signature'] = $this->createSignature($req, $this->secret);
+		if (!empty($this->secret)) {
+			$req['signature'] = $this->createSignature($req, $this->secret);
+		}
 
 		// Always clear to prevent redirects after
 		$this->clearData();
@@ -381,8 +382,9 @@ class Gateway extends \Magento\Payment\Model\Method\AbstractMethod {
 		if (isset($_REQUEST['PaReq'])) {
 			$req['threeDSPaReq'] = $_REQUEST['PaReq'];
 		}
-
-		$req['signature'] = $this->createSignature($req, $this->secret);
+		if (!empty($this->secret)) {
+			$req['signature'] = $this->createSignature($req, $this->secret);
+		}
 		$res = $this->makeRequest(self::DIRECT_URL, $req);
 		$this->log('Verifying response from gateway');
 		if (!$this->hasKeys($res, $this->getGenuineResponseHeaders())) {
@@ -557,7 +559,6 @@ class Gateway extends \Magento\Payment\Model\Method\AbstractMethod {
 	 * @return String       The finished signature
 	 */
 	public function createSignature(array &$data, $key) {
-		$this->log("Creating signature using '{$key}'");
 		if (!$key || !is_string($key) || $key === '' || !$data || !is_array($data)) {
 				return null;
 		}
@@ -571,7 +572,7 @@ class Gateway extends \Magento\Payment\Model\Method\AbstractMethod {
 		$ret = preg_replace('/%0D%0A|%0A%0D|%0A|%0D/i', '%0A', $ret);
 		// Hash the signature string and the key together
 		$hash = hash('SHA512', $ret . $key);
-		$this->log("Signature: {$hash}");
+
 		return $hash;
 	}
 	/**
