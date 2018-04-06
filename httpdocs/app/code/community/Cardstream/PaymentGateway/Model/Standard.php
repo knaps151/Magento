@@ -243,7 +243,7 @@ class Cardstream_PaymentGateway_Model_Standard extends Mage_Payment_Model_Method
 		echo "<form id='redirect' action='" . $this->gatewayUrl . "' method='POST'>";
 		// Get session stored keys for a hosted request
 		foreach ($req as $key => $value) {
-			echo "<input type='hidden' name='$key' value='$value'/>";
+			echo "<input type='hidden' name=\"$key\" value=\"$value\"/>";
 		}
 		echo "</form>";
 		echo "<script>document.onreadystatechange = () => {document.getElementById('redirect').submit();}</script>";
