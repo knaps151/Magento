@@ -246,7 +246,7 @@ class Cardstream_PaymentGateway_Model_Standard extends Mage_Payment_Model_Method
 			echo "<input type='hidden' name=\"$key\" value=\"$value\"/>";
 		}
 		echo "</form>";
-		echo "<script>document.onreadystatechange = () => {document.getElementById('redirect').submit();}</script>";
+		echo "<script>document.onreadystatechange = function() {document.getElementById('redirect').submit();}</script>";
 		die();
 	}
 	private function getDirectDetails() {
