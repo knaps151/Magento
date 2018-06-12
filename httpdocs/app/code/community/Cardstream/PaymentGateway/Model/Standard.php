@@ -9,10 +9,11 @@ class Cardstream_PaymentGateway_Model_Standard extends Mage_Payment_Model_Method
 	const SERVICE_ERROR = 'SERVICE ERROR - CONTACT ADMIN';
 	const INVALID_REQUEST = 'INVALID REQUEST';
 	const INSECURE_ERROR = 'The %s module cannot be used under an insecure host and has been hidden for user protection';
+	const NOCONFIG_ERROR = 'The %s module has not been configured and must be configured before use! You can set this up in System > Configuration > Payment Methods';
 
 	protected $_code  = 'PaymentGateway_standard';
 	protected $_infoBlockType = 'payment/info';
-	protected $_formBlockType;
+	protected $_formBlockType = 'PaymentGateway/HostedForm';
 	protected $_isGateway               = true;
 	protected $_canCapture              = true;
 	protected $_canUseInternal          = true;
@@ -30,7 +31,9 @@ class Cardstream_PaymentGateway_Model_Standard extends Mage_Payment_Model_Method
 
 	public function __construct(){
 		$this->method = $this->getConfigData('IntegrationMethod');
-		$this->_formBlockType = "PaymentGateway/{$this->method}Form";
+		if (!empty($this->method) && ($this->method === 'Hosted' || $this->method === 'Direct')) {
+			$this->_formBlockType = "PaymentGateway/{$this->method}Form";
+		}
 		$this->countryCode = $this->getConfigData('CountryCode');
 		$this->currencyCode = $this->getConfigData('CurrencyCode');
 		$this->secret = trim($this->getConfigData('MerchantSharedKey'));
@@ -39,7 +42,7 @@ class Cardstream_PaymentGateway_Model_Standard extends Mage_Payment_Model_Method
 		$this->canDebug = (boolean)$this->getConfigData('Debug');
 		$this->session = $this->getCoreSession();
 
-		// Idiot proof the Gateway URL we are given
+		// Automatically determine best gateway URL & help prevent user-error
 		if (
 			// Make sure we're given an valid URL
 			($url = $this->getConfigData('GatewayUrl')) &&
@@ -70,6 +73,13 @@ class Cardstream_PaymentGateway_Model_Standard extends Mage_Payment_Model_Method
 		if(!$this->isSecure() && $this->method == 'Direct') {
 			$this->_canUseCheckout = false;
 			$error = sprintf(self::INSECURE_ERROR, self::_MODULE);
+			$this->log($error, true);
+		}
+		if (empty($this->method)) {
+			// Cannot show anything here because the module is not correctly
+			// set up!
+			$this->_canUseCheckout = false;
+			$error = sprintf(self::NOCONFIG_ERROR, self::_MODULE);
 			$this->log($error, true);
 		}
 	}
