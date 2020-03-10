@@ -1,36 +1,63 @@
-Version 2.3 and above
-=================================
+# p3 Payment Gateway for Magento 2
 
-Project Code: [GitHub Code](https://github.com/cardstream/magento-module/tree/magento-2.3)
+**Compatibility**
 
-Downloadable: [Download Plugin Link](https://github.com/cardstream/magento-module/archive/magento-2.3.zip)
+**Compatible with Magento 2.0**
+Supports both Hosted and Direct integrations
 
-Version 2.0 and 2.2.X
-=================================
+## Installation
+**Step 1:**
 
-Project Code: [GitHub Code](https://github.com/cardstream/magento-module/tree/Magento-2.0)
+If you are upgrading this module, please make sure to disable the module first with `bin/magento module:disable p3_PaymentGateway`. Afterwards, make sure to delete the `app/code/Pixel` or `app/code/p3` directories that may interfer with the new version. Make sure to delete the `p3_PaymentGateway` row from the `setup_module` table in the database so that any database tables required can get created.
 
-Downloadable: [Download Plugin Link](https://github.com/cardstream/magento-module/archive/Magento-2.0.zip)
+**Step 2:**
+Copy the contents of httpdocs to your Magento root directory. If you are asked if you want to replace any existing files, click Yes.
 
-Version 1.9
-=================================
+**Step 3:**
+Enable the new module using the command `bin/magento module:enable p3_PaymentGateway`
 
-Project Code: [GitHub Code](https://github.com/cardstream/magento-module/tree/Magento-1.9)
+**Step 4:**
+Upgrade and re-compile magento so that the system will install the module and create all necessary arrangements for the module. This command can be particulary helpful...
+```
+bin/magento setup:upgrade && bin/magento setup:db-schema:upgrade && bin/magento setup:di:compile && chmod 775 -R ./var
+```
 
-Downloadable: [Download Plugin Link](https://github.com/cardstream/magento-module/archive/Magento-1.9.zip)
+**Step 5:**
+Login to the Admin area of Magento. Click on System > Cache Management. Click on the button labelled ‘Flush Magento Cache’, located at the top right of the page.
 
+**Step 6:**
+Click on Stores > Configuration then click on Payment Methods under the Sales heading on the left-hand side of the page. All installed payment methods will be displayed.
 
-Version 1.8
-=================================
+**Step 7:**
+Click on cardstream Payment Gateway to expand the configuration options that you will need to fill out before you can use the module. Here you can also select the hosted or direct integration type. Debugging should be turned off during production.
 
-Project Code: [GitHub Code](https://github.com/cardstream/magento-module/tree/Magento-1.8)
+**Step 8:**
+Head over to the store's settings and select advanced and then system. Once on this page; change the caching type to 'Varnished'.
 
-Downloadable: [Download Plugin Link](https://github.com/cardstream/magento-module/archive/Magento-1.8.zip)
+## FAQ
+**The processing page `/p3/order/process` shows an error page (Page Not Found)**
 
+**Did you upgrade and re-compile Magento?** *Otherwise, have you changed either the order controller filename, the directory the order controller was in, or the name of that directory? Do you have the route setup in the `/etc/frontend/routes.xml` under the route attributes; `id` of `p3` and `frontName` as `p3`. Does that same route contain the module element with a `name` attribute of `p3_PaymentGateway`? If you answered no to any of these questions. Please set up the appropriate arrangements based on the questions asked and try again after an upgrade & recompile command. Ask support if the error continues.*
 
-Version 1.7 and before
-=================================
+**I get the following error - router requires an id but one isn't set**
 
-Project Code: [GitHub Code](https://github.com/cardstream/magento-module/tree/Magento-1.7)
+Go to `etc/frontend/routes.xml` and make sure that the router element uses an `id` attribute with the value `standard`
 
-Downloadable: [Download Plugin Link](https://github.com/cardstream/magento-module/archive/Magento-1.7.zip)
+**I get the following error - "Module version difference schema version higher/lower than in database"**
+
+Make sure to delete the `p3_PaymentGateway` row from the setup_module database so that any database tables required can get created during the upgrade/db-schema process upon installation
+
+**I get incorrect signature during checkout**
+
+Is a signature set up in your configuration both in Magento and the MMS? Make sure that this only contains alphabetical and numeric characters without any spaces, full-stops, etc.
+
+**I cannot see the cardstream Payment Gateway in the backend (admin area)**
+
+Please try running the following commands:
+
+```
+php bin/magento setup:upgrade
+php bin/magento setup:di:compile
+```
+**The amount, address and name appear to cache upon checkout**
+Are you using the latest version of this module which fixes this issue?
